@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Daily Learning Streak Tracker
 
 A web application designed to help students maintain a consistent learning habit. A streak-based system encourages students to continue their daily learning by tracking consecutive study days.
@@ -36,3 +37,7 @@ When a user marks their study day, the data is pushed to a persistent local JSON
 - If you logged study for today or yesterday, the system considers your streak active. Daily streaks increase by 1 for every consecutive study day going backwards.
 - If the difference between the most recent study date and today is greater than 1 day, the current active streak drops to 0. Every subsequent consecutive study day is then counted normally when building up the streak again after the break.
 - Duplicate inputs for the exact same local date will be rejected by the API endpoint, preventing multi-logging exploits per day.
+=======
+# Daily-Learning-streak-Tracker
+The **Daily Learning Streak Tracker** is a web app that helps students maintain consistent study habits. Users can mark “I Studied Today,” track their current streak, view total study days, and see study history. Built with Next.js, TypeScript, and Tailwind CSS, it demonstrates basic full-stack development and streak logic.
+>>>>>>> 2d259a4a234d9682137bf6f0c8a3a8ffe11e9d47
