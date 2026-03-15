@@ -13,7 +13,7 @@ export async function POST() {
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
     const displayDate = today.toLocaleDateString('en-US', options);
 
-    const success = addStudyDate(dateStr);
+    const success = await addStudyDate(dateStr);
 
     if (success) {
       return NextResponse.json({

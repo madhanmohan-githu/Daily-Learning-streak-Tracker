@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import { getHistory } from '@/lib/db';
 import { calculateStreak } from '@/lib/streakLogic';
 
+export const dynamic = 'force-dynamic';
+
+
 export async function GET() {
   try {
-    const history = getHistory();
+    const history = await getHistory();
     const stats = calculateStreak(history);
     
     // Format the date properly if it exists

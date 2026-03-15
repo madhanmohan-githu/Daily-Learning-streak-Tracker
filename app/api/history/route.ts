@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getHistory } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
-    const history = getHistory();
+    const history = await getHistory();
     
     // Format dates to e.g., "14 March 2026"
     const formattedHistory = history.map(dateStr => {

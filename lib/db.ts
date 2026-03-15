@@ -1,43 +1,54 @@
-import fs from 'fs';
+import sqlite3 from 'sqlite3';
+import { open, Database } from 'sqlite';
 import path from 'path';
 
-const dataFilePath = path.join(process.cwd(), 'data.json');
+// On Vercel Serverless functions, process.cwd() is read-only.
+// We must place the SQLite database in the ephemeral /tmp directory in production.
+const dbPath = process.env.DATABASE_URL 
+  || (process.env.NODE_ENV === 'production' 
+       ? path.join('/tmp', 'data.db') 
+       : path.join(process.cwd(), 'data.db'));
 
-export interface AppData {
-  studyDates: string[]; // Keep dates in format YYYY-MM-DD for easier parsing, but display can be formatted later
+let db: Database | null = null;
+
+export async function getDb(): Promise<Database> {
+  if (!db) {
+    db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database
+    });
+    
+    // Ensure the table exists
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS study_dates (
+        date TEXT PRIMARY KEY
+      )
+    `);
+  }
+  return db;
 }
 
-// Ensure the db exists
-export const initDB = (): AppData => {
-  if (!fs.existsSync(dataFilePath)) {
-    const defaultData: AppData = { studyDates: [] };
-    fs.writeFileSync(dataFilePath, JSON.stringify(defaultData, null, 2));
-    return defaultData;
+export const getHistory = async (): Promise<string[]> => {
+  const database = await getDb();
+  // Fetch all dates, ordered descending
+  const rows = await database.all('SELECT date FROM study_dates ORDER BY date DESC');
+  return rows.map(row => row.date);
+};
+
+export const addStudyDate = async (date: string): Promise<boolean> => {
+  const database = await getDb();
+  
+  try {
+    // Insert or ignore if it already exists (since date is PRIMARY KEY)
+    const result = await database.run(
+      'INSERT OR IGNORE INTO study_dates (date) VALUES (?)',
+      [date]
+    );
+    
+    // changes will be 1 if inserted, 0 if ignored
+    return (result.changes ?? 0) > 0;
+  } catch (error) {
+    console.error("Error inserting study date:", error);
+    return false;
   }
-  return JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
-};
-
-const readDB = (): AppData => {
-  return initDB();
-};
-
-const writeDB = (data: AppData): void => {
-  fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
-};
-
-export const getHistory = (): string[] => {
-  const db = readDB();
-  return db.studyDates;
-};
-
-export const addStudyDate = (date: string): boolean => {
-  const db = readDB();
-  if (db.studyDates.includes(date)) {
-    return false; // Already studied on this date
-  }
-  db.studyDates.push(date);
-  // Optional: keep it sorted (descending strings is easy for YYYY-MM-DD)
-  db.studyDates.sort().reverse();
-  writeDB(db);
-  return true;
 };
